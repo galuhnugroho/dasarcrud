@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Products;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -11,7 +12,8 @@ class ProductController extends Controller
      */
     public function index()
     {
-        //
+        $products = Products::all();
+        return view('products.index', compact('products'));
     }
 
     /**
@@ -19,7 +21,7 @@ class ProductController extends Controller
      */
     public function create()
     {
-        //
+        return view('products.create');
     }
 
     /**
@@ -27,7 +29,20 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validatedData = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'color' => ['required', 'string', 'max:255'],
+            'stock' => ['required', 'integer'],
+            'price' => ['required', 'integer'],
+            'image' => ['image', 'mimes:jpg,png,jpeg,gif,svg', 'file', 'max:10240'],
+        ]);
+
+        if ($request->file('image')) {
+            $validatedData['image'] = $request->file('image')->store('images', 'public');
+        }
+
+        Products::create($validatedData);
+        return redirect('/products')->with('success', 'Data berhasil ditambah!');
     }
 
     /**
