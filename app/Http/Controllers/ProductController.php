@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Products;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -42,7 +43,7 @@ class ProductController extends Controller
         }
 
         Products::create($validatedData);
-        return redirect('/products')->with('success', 'Data berhasil ditambah!');
+        return redirect()->route('products.index')->with('success', 'Data berhasil ditambah!');
     }
 
     /**
@@ -58,7 +59,8 @@ class ProductController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $product = Products::find($id);
+        return view('products.edit', compact('product'));
     }
 
     /**
@@ -66,15 +68,28 @@ class ProductController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $validatedData = $request->validate([
+            'name' => ['string', 'max:255'],
+            'color' => ['string', 'max:255'],
+            'stock' => ['integer'],
+            'price' => ['integer'],
+            'image' => ['image', 'mimes:jpg,png,jpeg,gif,svg', 'file', 'max:10240'],
+        ]);
+
+        $product = Products::findOrFail($id);
+        $product->update($validatedData);
+        return redirect()->route('products.index')->with('success', 'Data berhasil diperbarui!');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        Products::find($id)->delete();
-        return redirect('/products')->with('success', 'Data berhasil dihapus!');
+        $product = Products::findOrFail($id);
+        Storage::delete('public/images/' . $product->image);
+        $product->delete();
+
+        return redirect()->route('products.index')->with('success', 'Data berhasil dihapus!');
     }
 }
